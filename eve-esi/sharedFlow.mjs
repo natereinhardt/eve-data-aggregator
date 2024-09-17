@@ -7,7 +7,7 @@
  */
 
 import fetch from 'node-fetch';
-import { validateEveJwt } from './validateJwt.js';
+import { validateEveJwt } from './validateJwt.mjs';
 import { URLSearchParams } from 'url';
 
 export function printAuthUrl(clientId, codeChallenge = null) {
@@ -79,6 +79,7 @@ export async function handleSsoTokenResponse(ssoResponse) {
     console.log("\nVerifying access token JWT...");
 
     const jwt = await validateEveJwt(accessToken);
+    console.log(jwt)
     const characterId = jwt["sub"].split(":")[2];
     const characterName = jwt["name"];
     const blueprintPath = `https://esi.evetech.net/latest/characters/${characterId}/blueprints/`;
