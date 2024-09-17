@@ -22,7 +22,7 @@ export function printAuthUrl(clientId, codeChallenge = null) {
     response_type: "code",
     redirect_uri: "https://localhost/callback/",
     client_id: clientId,
-    scope: "esi-characters.read_blueprints.v1",
+    scope: "esi-wallet.read_corporation_wallets.v1",
     state: "unique-state"
   };
 
@@ -79,12 +79,15 @@ export async function handleSsoTokenResponse(ssoResponse) {
     console.log("\nVerifying access token JWT...");
 
     const jwt = await validateEveJwt(accessToken);
-    console.log(jwt)
+    console.log(jwt);
     const characterId = jwt["sub"].split(":")[2];
     const characterName = jwt["name"];
-    const blueprintPath = `https://esi.evetech.net/latest/characters/${characterId}/blueprints/`;
 
-    console.log(`\nSuccess! Here is the payload received from the EVE SSO: ${JSON.stringify(data)}\nYou can use the access_token to make an authenticated request to ${blueprintPath}`);
+    const corporationId = 98399918;
+    const walletDivision = 5;
+    const walletPath = `https://esi.evetech.net/latest/corporations/${corporationId}/wallets/${walletDivision}/journal/`;
+
+    console.log(`\nSuccess! Here is the payload received from the EVE SSO: ${JSON.stringify(data)}\nYou can use the access_token to make an authenticated request to ${walletPath}`);
 
     console.log("\nPress any key to have this program make the request for you:");
     process.stdin.setRawMode(true);
@@ -97,15 +100,15 @@ export async function handleSsoTokenResponse(ssoResponse) {
         "Authorization": `Bearer ${accessToken}`
       };
 
-      const res = await fetch(blueprintPath, { headers: headers });
-      console.log(`\nMade request to ${blueprintPath} with headers: ${JSON.stringify(res.headers.raw())}`);
+      const res = await fetch(walletPath, { headers: headers });
+      console.log(`\nMade request to ${walletPath} with headers: ${JSON.stringify(res.headers.raw())}`);
       
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
 
       const data = await res.json();
-      console.log(`\n${characterName} has ${data.length} blueprints`);
+      console.log(`\n${characterName} has ${data.length} wallet journal entries in division ${walletDivision}`);
     });
   } else {
     console.log("\nSomething went wrong! Re read the comment at the top of this file and make sure you completed all the prerequisites then try again. Here's some debug info to help you out:");
