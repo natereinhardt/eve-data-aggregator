@@ -1,0 +1,17 @@
+{
+  "name": "eve-data-aggregator",
+  "version": "1.0.0",
+  "description": "A simple Node.js application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Your Name",
+  "license": "ISC",
+  "dependencies": {
+    "jsonwebtoken": "^8.5.1",
+    "jwk-to-pem": "^2.0.6",
+    "node-fetch": "^2.6.1"
+  }
+}
