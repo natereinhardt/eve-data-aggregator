@@ -1,10 +1,10 @@
 // server.mjs
 import { createServer } from 'node:http'
-import { main as runOauthFlow } from './eve-esi/esiOauthNative.mjs'
+import { runOAuthFlow } from './eve-esi/esiOauthNative.mjs'
 
 const server = createServer((req, res) => {
   if (req.url === '/run-oauth' && req.method === 'GET') {
-    runOauthFlow()
+    runOAuthFlow()
       .then(() => {
         res.writeHead(200, { 'Content-Type': 'text/plain' })
         res.end('OAuth flow completed successfully.\n')
