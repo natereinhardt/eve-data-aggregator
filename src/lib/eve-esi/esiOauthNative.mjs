@@ -7,7 +7,9 @@ import inquirer from 'inquirer';
 
 export async function runOAuthFlow() {
   console.log(
-    chalk.yellow('Takes you through a local example of the OAuth 2.0 native flow.'),
+    chalk.yellow(
+      'Takes you through a local example of the OAuth 2.0 native flow.',
+    ),
   );
 
   const { codeVerifier, codeChallenge } = generateCodeVerifierAndChallenge();
@@ -137,7 +139,9 @@ export async function handleSsoTokenResponse(ssoResponse) {
       ),
     );
     console.log(chalk.red(`\nSSO response code is: ${ssoResponse.status}`));
-    console.log(chalk.red(`\nSSO response JSON is: ${await ssoResponse.json()}`));
+    console.log(
+      chalk.red(`\nSSO response JSON is: ${await ssoResponse.json()}`),
+    );
     throw new Error('SSO token response error');
   }
 }
