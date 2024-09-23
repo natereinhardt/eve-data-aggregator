@@ -1,0 +1,11 @@
+{
+  "command": "repeat",
+  "description": "Repeats the OAuth flow at specified intervals",
+  "options": [
+    {
+      "name": "interval",
+      "description": "Interval in minutes",
+      "required": true
+    }
+  ]
+}

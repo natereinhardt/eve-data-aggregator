@@ -14,57 +14,24 @@ console.log(
   ),
 );
 
-program.action(() => {
-  inquirer
-    .prompt([
-      {
-        type: 'confirm',
-        name: 'runOAuth',
-        message: 'Do you want to run the OAuth flow?',
-        default: false,
-      },
-      {
-        type: 'confirm',
-        name: 'repeat',
-        message: 'Do you want to repeat the OAuth flow?',
-        default: false,
-        when: (answers) => answers.runOAuth,
-      },
-      {
-        type: 'input',
-        name: 'interval',
-        message: 'How often do you want to run the OAuth flow (in minutes)?',
-        validate: (value) => {
-          const valid =
-            !isNaN(parseFloat(value)) && isFinite(value) && value > 0;
-          return valid || 'Please enter a positive number';
-        },
-        filter: Number,
-        when: (answers) => answers.repeat,
-      },
-    ])
-    .then(async (answers) => {
-      console.log(chalk.green(`Hey there, ${answers.name}!`));
-      if (answers.runOAuth) {
-        const runFlow = async () => {
-          try {
-            await runOAuthFlow();
-            console.log(chalk.green('OAuth flow completed successfully.'));
-          } catch (error) {
-            console.error(
-              chalk.red(`Error during OAuth flow: ${error.message}`),
-            );
-          }
-        };
+program
+  .command('repeat')
+  .description('Repeats the OAuth flow at specified intervals')
+  .requiredOption('-i, --interval <minutes>', 'Interval in minutes')
+  .action(async (options) => {
+    const intervalMs = options.interval * 60 * 1000;
 
-        await runFlow();
-
-        if (answers.repeat) {
-          const intervalMs = answers.interval * 60 * 1000;
-          setInterval(runFlow, intervalMs);
-        }
+    const runFlow = async () => {
+      try {
+        await runOAuthFlow();
+        console.log(chalk.green('OAuth flow completed successfully.'));
+      } catch (error) {
+        console.error(chalk.red(`Error during OAuth flow: ${error.message}`));
       }
-    });
-});
+    };
+
+    await runFlow();
+    setInterval(runFlow, intervalMs);
+  });
 
 program.parse(process.argv);
