@@ -2,16 +2,23 @@
   "name": "eve-data-aggregator",
   "version": "1.0.0",
   "description": "A simple Node.js application",
-  "main": "server.js",
+  "main": "index.mjs",
   "scripts": {
-    "start": "node server.mjs",
+    "start": "node index.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Your Name",
   "license": "ISC",
   "dependencies": {
-    "jsonwebtoken": "^8.5.1",
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "figlet": "^1.7.0",
+    "inquirer": "^11.0.2",
+    "jsonwebtoken": "^9.0.2",
     "jwk-to-pem": "^2.0.6",
     "node-fetch": "^2.6.1"
+  },
+  "bin": {
+    "eve-import-cli": "./bin/index.mjs"
   }
 }
