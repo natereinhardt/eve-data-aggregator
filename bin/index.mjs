@@ -6,6 +6,9 @@ import figlet from 'figlet';
 import inquirer from 'inquirer';
 import { runOAuthFlow } from '../src/lib/eve-esi/esiOauthNative.mjs';
 import { importWalletData } from '../src/lib/eve-esi/walletService.mjs';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 program.version('1.0.0').description('My Node CLI');
 

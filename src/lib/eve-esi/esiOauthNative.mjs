@@ -13,7 +13,7 @@ export async function runOAuthFlow() {
   );
 
   const { codeVerifier, codeChallenge } = generateCodeVerifierAndChallenge();
-  const clientId = '7e42742a49e449c190b57ee5ba4d1a3b'; // Replace with your actual client ID
+  const clientId = process.env.CLIENT_ID;
 
   printAuthUrl(clientId, codeChallenge);
   const authCode = await promptAuthorizationCode();
@@ -48,7 +48,7 @@ async function requestAuthorizationToken(authCode, clientId, codeVerifier) {
     code: authCode,
     client_id: clientId,
     code_verifier: codeVerifier,
-    redirect_uri: 'https://localhost/callback/', // Replace with your actual redirect URI
+    redirect_uri: process.env.CALLBACK_URL, // Replace with your actual redirect URI
   };
 
   try {
@@ -64,10 +64,10 @@ export function printAuthUrl(clientId, codeChallenge = null) {
   const baseAuthUrl = 'https://login.eveonline.com/v2/oauth/authorize/';
   const params = {
     response_type: 'code',
-    redirect_uri: 'https://localhost/callback/',
+    redirect_uri: process.env.CALLBACK_URL,
     client_id: clientId,
-    scope: 'esi-wallet.read_corporation_wallets.v1',
-    state: 'unique-state',
+    scope: process.env.SCOPE,
+    state: process.env.STATE,
   };
 
   if (codeChallenge) {

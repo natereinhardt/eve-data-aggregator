@@ -3,7 +3,7 @@ import chalk from 'chalk';
 
 export async function importWalletData(jwt, accessToken) {
   const characterName = jwt['name'];
-  const corporationId = 98399918;
+  const corporationId = process.env.CORPORATION_ID;
 
   for (let walletDivision = 1; walletDivision <= 6; walletDivision++) {
     let page = 1;
