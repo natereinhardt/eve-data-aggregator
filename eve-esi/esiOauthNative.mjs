@@ -3,7 +3,7 @@ import readline from "readline";
 import fetch from "node-fetch";
 import { validateEveJwt } from "./validateJwt.mjs";
 import { URLSearchParams } from "url";
-import { sendToTinybird } from "../tinybird/tinyBirdService.mjs";
+import { sendToTinybird, sanitizeEntry } from "../tinybird/tinyBirdService.mjs";
 
 export async function runOAuthFlow() {
   console.log("Takes you through a local example of the OAuth 2.0 native flow.");
@@ -204,33 +204,6 @@ export async function handleSsoTokenResponse(ssoResponse) {
     );
     console.log(`\nSSO response code is: ${ssoResponse.status}`);
     console.log(`\nSSO response JSON is: ${await ssoResponse.json()}`);
-  }
-}
-
-export function sanitizeEntry(entry) {
-  const schema = {
-    amount: "float",
-    balance: "float",
-    context_id: "int",
-    context_id_type: "string",
-    date: "string",
-    description: "string",
-    first_party_id: "int",
-    id: "int",
-    reason: "string",
-    ref_type: "string",
-    second_party_id: "int",
-    wallet_division: "int",
-  };
-
-  for (const key in schema) {
-    if (schema[key] === "int") {
-      entry[key] = entry[key] == null ? 0 : entry[key];
-    } else if (schema[key] === "float") {
-      entry[key] = entry[key] == null ? 0.0 : parseFloat(entry[key]);
-    } else if (schema[key] === "string") {
-      entry[key] = entry[key] == null ? "" : entry[key];
-    }
   }
 }
 
