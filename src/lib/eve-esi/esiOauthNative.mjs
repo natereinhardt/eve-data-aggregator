@@ -1,12 +1,13 @@
 import crypto from 'crypto';
-import readline from 'readline';
 import fetch from 'node-fetch';
 import { URLSearchParams } from 'url';
 import { validateEveJwt } from './validateJwt.mjs';
+import chalk from 'chalk';
+import inquirer from 'inquirer';
 
 export async function runOAuthFlow() {
   console.log(
-    'Takes you through a local example of the OAuth 2.0 native flow.',
+    chalk.yellow('Takes you through a local example of the OAuth 2.0 native flow.'),
   );
 
   const { codeVerifier, codeChallenge } = generateCodeVerifierAndChallenge();
@@ -28,17 +29,15 @@ function generateCodeVerifierAndChallenge() {
 }
 
 function promptAuthorizationCode() {
-  return new Promise((resolve) => {
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-
-    rl.question('Enter the authorization code: ', (authCode) => {
-      rl.close();
-      resolve(authCode);
-    });
-  });
+  return inquirer
+    .prompt([
+      {
+        type: 'input',
+        name: 'authCode',
+        message: 'Enter the authorization code:',
+      },
+    ])
+    .then((answers) => answers.authCode);
 }
 
 async function requestAuthorizationToken(authCode, clientId, codeVerifier) {
@@ -54,7 +53,7 @@ async function requestAuthorizationToken(authCode, clientId, codeVerifier) {
     const ssoResponse = await sendTokenRequest(formValues);
     return await handleSsoTokenResponse(ssoResponse);
   } catch (error) {
-    console.error('Error during the OAuth 2.0 flow:', error);
+    console.error(chalk.red('Error during the OAuth 2.0 flow:'), error);
     throw error; // Ensure the error is propagated
   }
 }
@@ -78,8 +77,15 @@ export function printAuthUrl(clientId, codeChallenge = null) {
   const fullAuthUrl = `${baseAuthUrl}?${stringParams}`;
 
   console.log(
-    `\nOpen the following link in your browser:\n\n ${fullAuthUrl} \n\n Once you have logged in as a character you will get redirected to https://localhost/callback/.`,
+    chalk.greenBright('\nOpen the following link in your browser:\n\n'),
   );
+  console.log(chalk.blue(fullAuthUrl));
+  console.log(
+    chalk.greenBright(
+      '\n\nOnce you have logged in as a character you will get redirected to ',
+    ),
+  );
+  console.log(chalk.yellow('https://localhost/callback/.'));
 }
 
 export async function sendTokenRequest(formValues, addHeaders = {}) {
@@ -96,7 +102,9 @@ export async function sendTokenRequest(formValues, addHeaders = {}) {
   });
 
   console.log(
-    `Request sent to URL ${res.url} with headers ${JSON.stringify(headers)} and form values: ${JSON.stringify(formValues)}`,
+    chalk.cyan(
+      `Request sent to URL ${res.url} with headers ${JSON.stringify(headers)} and form values: ${JSON.stringify(formValues)}`,
+    ),
   );
 
   if (!res.ok) {
@@ -111,21 +119,25 @@ export async function handleSsoTokenResponse(ssoResponse) {
     const data = await ssoResponse.json();
     const accessToken = data['access_token'];
 
-    console.log('\nVerifying access token JWT...');
+    console.log(chalk.green('\nVerifying access token JWT...'));
 
     const jwt = await validateEveJwt(accessToken);
-    console.log(jwt);
+    console.log(chalk.green(JSON.stringify(jwt, null, 2)));
 
     return { jwt, accessToken };
   } else {
     console.log(
-      "\nSomething went wrong! Re read the comment at the top of this file and make sure you completed all the prerequisites then try again. Here's some debug info to help you out:",
+      chalk.red(
+        "\nSomething went wrong! Re-read the comment at the top of this file and make sure you completed all the prerequisites then try again. Here's some debug info to help you out:",
+      ),
     );
     console.log(
-      `\nSent request with url: ${ssoResponse.url} \nbody: ${ssoResponse.body} \nheaders: ${JSON.stringify(ssoResponse.headers.raw())}`,
+      chalk.red(
+        `\nSent request with url: ${ssoResponse.url} \nbody: ${ssoResponse.body} \nheaders: ${JSON.stringify(ssoResponse.headers.raw())}`,
+      ),
     );
-    console.log(`\nSSO response code is: ${ssoResponse.status}`);
-    console.log(`\nSSO response JSON is: ${await ssoResponse.json()}`);
+    console.log(chalk.red(`\nSSO response code is: ${ssoResponse.status}`));
+    console.log(chalk.red(`\nSSO response JSON is: ${await ssoResponse.json()}`));
     throw new Error('SSO token response error');
   }
 }

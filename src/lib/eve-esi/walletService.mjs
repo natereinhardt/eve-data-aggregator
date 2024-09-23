@@ -1,4 +1,5 @@
 import { sendToTinybird } from '../tinyBird/tinyBirdService.mjs';
+import chalk from 'chalk';
 
 export async function importWalletData(jwt, accessToken) {
   const characterName = jwt['name'];
@@ -12,7 +13,9 @@ export async function importWalletData(jwt, accessToken) {
       const walletPath = `https://esi.evetech.net/latest/corporations/${corporationId}/wallets/${walletDivision}/journal/?page=${page}`;
 
       console.log(
-        `\nFetching data for wallet division ${walletDivision}, page ${page}...`,
+        chalk.blue(
+          `\nFetching data for wallet division ${walletDivision}, page ${page}...`,
+        ),
       );
 
       const headers = {
@@ -22,17 +25,22 @@ export async function importWalletData(jwt, accessToken) {
       try {
         const res = await fetch(walletPath, { headers: headers });
         console.log(
-          `\nMade request to ${walletPath} with headers: ${JSON.stringify(
-            [...res.headers.entries()].reduce((acc, [key, value]) => {
-              acc[key] = value;
-              return acc;
-            }, {}),
-          )}`,
+          chalk.cyan(
+            `\nMade request to ${walletPath} with headers: ${JSON.stringify(
+              [...res.headers.entries()].reduce((acc, [key, value]) => {
+                acc[key] = value;
+                return acc;
+              }, {}),
+            )}`,
+          ),
         );
 
         if (res.status === 500) {
+          const errorText = await res.text();
           console.error(
-            `Received 500 error for wallet division ${walletDivision}, page ${page}. Moving to next division.`,
+            chalk.red(
+              `Received 500 error for wallet division ${walletDivision}, page ${page}. Moving to next division. Error: ${errorText}`,
+            ),
           );
           hasMorePages = false;
           continue;
@@ -52,14 +60,18 @@ export async function importWalletData(jwt, accessToken) {
             entry.balance = parseFloat(entry.balance).toFixed(2);
           });
           console.log(
-            `\n${characterName} has ${data.length} wallet journal entries in division ${walletDivision}, page ${page}`,
+            chalk.green(
+              `\n${characterName} has ${data.length} wallet journal entries in division ${walletDivision}, page ${page}`,
+            ),
           );
           await sendToTinybird(data);
           page++;
         }
       } catch (error) {
         console.error(
-          `Error fetching data for wallet division ${walletDivision}, page ${page}: ${error.message}`,
+          chalk.red(
+            `Error fetching data for wallet division ${walletDivision}, page ${page}: ${error.message}`,
+          ),
         );
         hasMorePages = false;
       }
