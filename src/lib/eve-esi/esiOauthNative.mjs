@@ -18,7 +18,7 @@ export async function runOAuthFlow() {
 
   const authCode = await promptAuthorizationCode();
 
-  await requestAuthorizationToken(authCode, clientId, codeVerifier);
+  return await requestAuthorizationToken(authCode, clientId, codeVerifier);
 }
 
 function generateCodeVerifierAndChallenge() {
@@ -56,7 +56,7 @@ async function requestAuthorizationToken(authCode, clientId, codeVerifier) {
 
   try {
     const ssoResponse = await sendTokenRequest(formValues);
-    await handleSsoTokenResponse(ssoResponse);
+    return await handleSsoTokenResponse(ssoResponse);
   } catch (error) {
     console.error('Error during the OAuth 2.0 flow:', error);
   }
@@ -133,7 +133,8 @@ export async function handleSsoTokenResponse(ssoResponse) {
     const jwt = await validateEveJwt(accessToken);
     console.log(jwt);
 
-    await importWalletData(jwt, accessToken);
+    // await importWalletData(jwt, accessToken);
+    return { jwt, accessToken };
   } else {
     console.log(
       "\nSomething went wrong! Re read the comment at the top of this file and make sure you completed all the prerequisites then try again. Here's some debug info to help you out:",

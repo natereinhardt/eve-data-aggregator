@@ -2,9 +2,10 @@
 
 import { program } from 'commander';
 import chalk from 'chalk';
-import inquirer from 'inquirer';
 import figlet from 'figlet';
+import inquirer from 'inquirer';
 import { runOAuthFlow } from '../src/lib/eve-esi/esiOauthNative.mjs';
+import { importWalletData } from '../src/lib/eve-esi/walletService.mjs';
 
 program.version('1.0.0').description('My Node CLI');
 
@@ -14,24 +15,54 @@ console.log(
   ),
 );
 
+const runFlow = async () => {
+  const { jwt, accessToken } = await runOAuthFlow();
+  return { jwt, accessToken };
+};
+
+const runJobs = async ({ jwt, accessToken }) => {
+  const answers = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'importWalletData',
+      message: 'Do you want to run importWalletData?',
+      default: false,
+    },
+    // Add more prompts for other jobs here
+  ]);
+
+  if (answers.importWalletData) {
+    try {
+      await importWalletData(jwt, accessToken);
+      console.log(chalk.green('importWalletData completed successfully.'));
+    } catch (error) {
+      console.error(
+        chalk.red(`Error during importWalletData: ${error.message}`),
+      );
+    }
+  }
+
+  // Add more job executions here based on user answers
+};
+
 program
   .command('repeat')
   .description('Repeats the OAuth flow at specified intervals')
-  .requiredOption('-i, --interval <minutes>', 'Interval in minutes')
+  .option('-i, --interval <minutes>', 'Interval in minutes')
   .action(async (options) => {
-    const intervalMs = options.interval * 60 * 1000;
-
-    const runFlow = async () => {
-      try {
-        await runOAuthFlow();
-        console.log(chalk.green('OAuth flow completed successfully.'));
-      } catch (error) {
-        console.error(chalk.red(`Error during OAuth flow: ${error.message}`));
-      }
-    };
-
-    await runFlow();
-    setInterval(runFlow, intervalMs);
+    const intervalMs = options.interval ? options.interval * 60 * 1000 : null;
+    const authData = await runFlow();
+    await runJobs(authData);
+    if (intervalMs) {
+      setInterval(async () => {
+        await runJobs(authData);
+      }, intervalMs);
+    }
   });
+
+program.action(async () => {
+  const authData = await runFlow();
+  await runJobs(authData);
+});
 
 program.parse(process.argv);
