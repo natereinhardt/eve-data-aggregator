@@ -1,21 +1,16 @@
 import crypto from 'crypto';
 import readline from 'readline';
 import fetch from 'node-fetch';
-
 import { URLSearchParams } from 'url';
 import { validateEveJwt } from './validateJwt.mjs';
-import { sendToTinybird } from '../tinyBird/tinyBirdService.mjs';
 
 export async function runOAuthFlow() {
-  console.log(
-    'Takes you through a local example of the OAuth 2.0 native flow.',
-  );
+  console.log('Takes you through a local example of the OAuth 2.0 native flow.');
 
   const { codeVerifier, codeChallenge } = generateCodeVerifierAndChallenge();
-
   const clientId = '7e42742a49e449c190b57ee5ba4d1a3b'; // Replace with your actual client ID
-  printAuthUrl(clientId, codeChallenge);
 
+  printAuthUrl(clientId, codeChallenge);
   const authCode = await promptAuthorizationCode();
 
   return await requestAuthorizationToken(authCode, clientId, codeVerifier);
@@ -23,11 +18,7 @@ export async function runOAuthFlow() {
 
 function generateCodeVerifierAndChallenge() {
   const codeVerifier = crypto.randomBytes(32).toString('hex');
-  const codeChallenge = crypto
-    .createHash('sha256')
-    .update(codeVerifier)
-    .digest('base64url');
-
+  const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
   return { codeVerifier, codeChallenge };
 }
 
@@ -59,15 +50,11 @@ async function requestAuthorizationToken(authCode, clientId, codeVerifier) {
     return await handleSsoTokenResponse(ssoResponse);
   } catch (error) {
     console.error('Error during the OAuth 2.0 flow:', error);
+    throw error; // Ensure the error is propagated
   }
 }
+
 export function printAuthUrl(clientId, codeChallenge = null) {
-  /**
-   * Prints the URL to redirect users to.
-   *
-   * @param {string} clientId - The client ID of an EVE SSO application
-   * @param {string} [codeChallenge] - A PKCE code challenge
-   */
   const baseAuthUrl = 'https://login.eveonline.com/v2/oauth/authorize/';
   const params = {
     response_type: 'code',
@@ -91,13 +78,6 @@ export function printAuthUrl(clientId, codeChallenge = null) {
 }
 
 export async function sendTokenRequest(formValues, addHeaders = {}) {
-  /**
-   * Sends a request for an authorization token to the EVE SSO.
-   *
-   * @param {Object} formValues - A dict containing the form encoded values that should be sent with the request
-   * @param {Object} [addHeaders={}] - A dict containing additional headers to send
-   * @returns {Promise<Response>} - A fetch Response object
-   */
   const headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
     Host: 'login.eveonline.com',
@@ -111,9 +91,7 @@ export async function sendTokenRequest(formValues, addHeaders = {}) {
   });
 
   console.log(
-    `Request sent to URL ${res.url} with headers ${JSON.stringify(
-      headers,
-    )} and form values: ${JSON.stringify(formValues)}`,
+    `Request sent to URL ${res.url} with headers ${JSON.stringify(headers)} and form values: ${JSON.stringify(formValues)}`,
   );
 
   if (!res.ok) {
@@ -133,18 +111,16 @@ export async function handleSsoTokenResponse(ssoResponse) {
     const jwt = await validateEveJwt(accessToken);
     console.log(jwt);
 
-    // await importWalletData(jwt, accessToken);
     return { jwt, accessToken };
   } else {
     console.log(
       "\nSomething went wrong! Re read the comment at the top of this file and make sure you completed all the prerequisites then try again. Here's some debug info to help you out:",
     );
     console.log(
-      `\nSent request with url: ${ssoResponse.url} \nbody: ${
-        ssoResponse.body
-      } \nheaders: ${JSON.stringify(ssoResponse.headers.raw())}`,
+      `\nSent request with url: ${ssoResponse.url} \nbody: ${ssoResponse.body} \nheaders: ${JSON.stringify(ssoResponse.headers.raw())}`,
     );
     console.log(`\nSSO response code is: ${ssoResponse.status}`);
     console.log(`\nSSO response JSON is: ${await ssoResponse.json()}`);
+    throw new Error('SSO token response error');
   }
 }

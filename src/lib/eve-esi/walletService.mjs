@@ -1,3 +1,5 @@
+import { sendToTinybird } from '../tinyBird/tinyBirdService.mjs';
+
 export async function importWalletData(jwt, accessToken) {
   const characterName = jwt['name'];
   const corporationId = 98399918;
@@ -21,7 +23,10 @@ export async function importWalletData(jwt, accessToken) {
         const res = await fetch(walletPath, { headers: headers });
         console.log(
           `\nMade request to ${walletPath} with headers: ${JSON.stringify(
-            res.headers.raw(),
+            [...res.headers.entries()].reduce((acc, [key, value]) => {
+              acc[key] = value;
+              return acc;
+            }, {}),
           )}`,
         );
 
