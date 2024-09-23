@@ -207,10 +207,10 @@ export async function handleSsoTokenResponse(ssoResponse) {
   }
 }
 
-function sanitizeEntry(entry) {
+export function sanitizeEntry(entry) {
   const schema = {
-    amount: "string",
-    balance: "string",
+    amount: "float",
+    balance: "float",
     context_id: "int",
     context_id_type: "string",
     date: "string",
@@ -226,6 +226,8 @@ function sanitizeEntry(entry) {
   for (const key in schema) {
     if (schema[key] === "int") {
       entry[key] = entry[key] == null ? 0 : entry[key];
+    } else if (schema[key] === "float") {
+      entry[key] = entry[key] == null ? 0.0 : parseFloat(entry[key]);
     } else if (schema[key] === "string") {
       entry[key] = entry[key] == null ? "" : entry[key];
     }
