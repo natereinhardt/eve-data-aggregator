@@ -5,7 +5,9 @@
   "main": "index.mjs",
   "scripts": {
     "start": "node index.mjs",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint .",
+    "format": "prettier --write ."
   },
   "author": "Your Name",
   "license": "ISC",
@@ -20,5 +22,12 @@
   },
   "bin": {
     "eve-import-cli": "./bin/index.mjs"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.1.0",
+    "eslint": "^9.11.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "prettier": "^3.3.3"
   }
 }

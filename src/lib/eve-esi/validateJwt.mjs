@@ -3,10 +3,11 @@ import jwt from 'jsonwebtoken';
 import readline from 'readline';
 import jwkToPem from 'jwk-to-pem';
 
-const SSO_META_DATA_URL = "https://login.eveonline.com/.well-known/oauth-authorization-server";
-const JWK_ALGORITHM = "RS256";
-const JWK_ISSUERS = ["login.eveonline.com", "https://login.eveonline.com"];
-const JWK_AUDIENCE = "EVE Online";
+const SSO_META_DATA_URL =
+  'https://login.eveonline.com/.well-known/oauth-authorization-server';
+const JWK_ALGORITHM = 'RS256';
+const JWK_ISSUERS = ['login.eveonline.com', 'https://login.eveonline.com'];
+const JWK_AUDIENCE = 'EVE Online';
 
 export async function validateEveJwt(token) {
   // Fetch JWKs URL from metadata endpoint
@@ -26,7 +27,7 @@ export async function validateEveJwt(token) {
   const jwkSets = jwksData.keys;
 
   // Pick the JWK with the requested algorithm
-  const jwkSet = jwkSets.find(item => item.alg === JWK_ALGORITHM);
+  const jwkSet = jwkSets.find((item) => item.alg === JWK_ALGORITHM);
   if (!jwkSet) {
     throw new Error(`No JWK found with algorithm ${JWK_ALGORITHM}`);
   }
@@ -47,7 +48,7 @@ export async function validateEveJwt(token) {
 async function main() {
   const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
   });
 
   rl.question('Enter an access token to validate: ', async (token) => {
@@ -55,7 +56,9 @@ async function main() {
 
     try {
       const tokenContents = await validateEveJwt(token);
-      console.log(`\nThe contents of the access token are:\n${JSON.stringify(tokenContents, null, 2)}`);
+      console.log(
+        `\nThe contents of the access token are:\n${JSON.stringify(tokenContents, null, 2)}`,
+      );
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
         console.error('The JWT token has expired');
