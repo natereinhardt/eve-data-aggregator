@@ -5,7 +5,9 @@ import { URLSearchParams } from 'url';
 import { validateEveJwt } from './validateJwt.mjs';
 
 export async function runOAuthFlow() {
-  console.log('Takes you through a local example of the OAuth 2.0 native flow.');
+  console.log(
+    'Takes you through a local example of the OAuth 2.0 native flow.',
+  );
 
   const { codeVerifier, codeChallenge } = generateCodeVerifierAndChallenge();
   const clientId = '7e42742a49e449c190b57ee5ba4d1a3b'; // Replace with your actual client ID
@@ -18,7 +20,10 @@ export async function runOAuthFlow() {
 
 function generateCodeVerifierAndChallenge() {
   const codeVerifier = crypto.randomBytes(32).toString('hex');
-  const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+  const codeChallenge = crypto
+    .createHash('sha256')
+    .update(codeVerifier)
+    .digest('base64url');
   return { codeVerifier, codeChallenge };
 }
 
