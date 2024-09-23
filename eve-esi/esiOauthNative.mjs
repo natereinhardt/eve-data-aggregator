@@ -206,5 +206,3 @@ export async function handleSsoTokenResponse(ssoResponse) {
     console.log(`\nSSO response JSON is: ${await ssoResponse.json()}`);
   }
 }
-
-runOAuthFlow().catch(console.error);
