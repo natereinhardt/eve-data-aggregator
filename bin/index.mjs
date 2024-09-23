@@ -2,9 +2,13 @@
 
 import { program } from 'commander';
 import chalk from 'chalk';
-import inquirer from 'inquirer';
 import figlet from 'figlet';
+import inquirer from 'inquirer';
 import { runOAuthFlow } from '../src/lib/eve-esi/esiOauthNative.mjs';
+import { importWalletData } from '../src/lib/eve-esi/walletService.mjs';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 program.version('1.0.0').description('My Node CLI');
 
@@ -14,57 +18,54 @@ console.log(
   ),
 );
 
-program.action(() => {
-  inquirer
-    .prompt([
-      {
-        type: 'confirm',
-        name: 'runOAuth',
-        message: 'Do you want to run the OAuth flow?',
-        default: false,
-      },
-      {
-        type: 'confirm',
-        name: 'repeat',
-        message: 'Do you want to repeat the OAuth flow?',
-        default: false,
-        when: (answers) => answers.runOAuth,
-      },
-      {
-        type: 'input',
-        name: 'interval',
-        message: 'How often do you want to run the OAuth flow (in minutes)?',
-        validate: (value) => {
-          const valid =
-            !isNaN(parseFloat(value)) && isFinite(value) && value > 0;
-          return valid || 'Please enter a positive number';
-        },
-        filter: Number,
-        when: (answers) => answers.repeat,
-      },
-    ])
-    .then(async (answers) => {
-      console.log(chalk.green(`Hey there, ${answers.name}!`));
-      if (answers.runOAuth) {
-        const runFlow = async () => {
-          try {
-            await runOAuthFlow();
-            console.log(chalk.green('OAuth flow completed successfully.'));
-          } catch (error) {
-            console.error(
-              chalk.red(`Error during OAuth flow: ${error.message}`),
-            );
-          }
-        };
+const runFlow = async () => {
+  const { jwt, accessToken } = await runOAuthFlow();
+  return { jwt, accessToken };
+};
 
-        await runFlow();
+const runJobs = async ({ jwt, accessToken }) => {
+  const answers = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'importWalletData',
+      message: 'Do you want to run importWalletData?',
+      default: false,
+    },
+    // Add more prompts for other jobs here
+  ]);
 
-        if (answers.repeat) {
-          const intervalMs = answers.interval * 60 * 1000;
-          setInterval(runFlow, intervalMs);
-        }
-      }
-    });
+  if (answers.importWalletData) {
+    try {
+      await importWalletData(jwt, accessToken);
+      console.log(chalk.green('importWalletData completed successfully.'));
+    } catch (error) {
+      console.error(
+        chalk.red(`Error during importWalletData: ${error.message}`),
+      );
+    }
+  }
+
+  // Add more job executions here based on user answers
+};
+
+program
+  .command('repeat')
+  .description('Repeats the OAuth flow at specified intervals')
+  .option('-i, --interval <minutes>', 'Interval in minutes')
+  .action(async (options) => {
+    const intervalMs = options.interval ? options.interval * 60 * 1000 : null;
+    const authData = await runFlow();
+    await runJobs(authData);
+    if (intervalMs) {
+      setInterval(async () => {
+        await runJobs(authData);
+      }, intervalMs);
+    }
+  });
+
+program.action(async () => {
+  const authData = await runFlow();
+  await runJobs(authData);
 });
 
 program.parse(process.argv);
