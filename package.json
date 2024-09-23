@@ -19,6 +19,6 @@
     "node-fetch": "^2.6.1"
   },
   "bin": {
-    "eve-import-cli": "./index.mjs"
+    "eve-import-cli": "./bin/index.mjs"
   }
 }

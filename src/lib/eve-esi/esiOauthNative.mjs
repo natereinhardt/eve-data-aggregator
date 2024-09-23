@@ -1,9 +1,10 @@
 import crypto from "crypto";
 import readline from "readline";
 import fetch from "node-fetch";
-import { validateEveJwt } from "./validateJwt.mjs";
+
 import { URLSearchParams } from "url";
-import { sendToTinybird, sanitizeEntry } from "../tinybird/tinyBirdService.mjs";
+import { validateEveJwt } from "./validateJwt.mjs";
+import { sendToTinybird } from "../tinyBird/tinyBirdService.mjs";
 
 export async function runOAuthFlow() {
   console.log("Takes you through a local example of the OAuth 2.0 native flow.");
@@ -176,12 +177,10 @@ export async function handleSsoTokenResponse(ssoResponse) {
               entry.wallet_division = walletDivision;
               entry.amount = parseFloat(entry.amount).toFixed(2);
               entry.balance = parseFloat(entry.balance).toFixed(2);
-              sanitizeEntry(entry);
             });
             console.log(
               `\n${characterName} has ${data.length} wallet journal entries in division ${walletDivision}, page ${page}`
             );
-            console.log(data);
             await sendToTinybird(data);
             page++;
           }

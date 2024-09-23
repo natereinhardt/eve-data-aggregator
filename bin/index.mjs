@@ -4,7 +4,7 @@ import { program } from "commander";
 import chalk from "chalk";
 import inquirer from "inquirer";
 import figlet from "figlet";
-import { runOAuthFlow } from "./eve-esi/esiOauthNative.mjs";
+import { runOAuthFlow } from "../src/lib/eve-esi/esiOauthNative.mjs";
 
 program.version("1.0.0").description("My Node CLI");
 
@@ -15,11 +15,6 @@ console.log(
 program.action(() => {
   inquirer
     .prompt([
-      {
-        type: "input",
-        name: "name",
-        message: "What's your name?",
-      },
       {
         type: "confirm",
         name: "runOAuth",
