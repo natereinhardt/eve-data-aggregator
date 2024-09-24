@@ -1,4 +1,4 @@
-import { sendToTinybird } from '../tinyBird/tinyBirdService.mjs';
+import { bulkUpsertJournalEntries } from '../service/transactionEntrieService.mjs';
 import chalk from 'chalk';
 
 export async function importWalletData(jwt, accessToken) {
@@ -58,13 +58,14 @@ export async function importWalletData(jwt, accessToken) {
             entry.wallet_division = walletDivision;
             entry.amount = parseFloat(entry.amount).toFixed(2);
             entry.balance = parseFloat(entry.balance).toFixed(2);
+            entry.transaction_type = entry.amount < 0 ? 0 : 1;
           });
           console.log(
             chalk.green(
               `\n${characterName} has ${data.length} wallet journal entries in division ${walletDivision}, page ${page}`,
             ),
           );
-          await sendToTinybird(data);
+          await bulkUpsertJournalEntries(data);
           page++;
         }
       } catch (error) {
