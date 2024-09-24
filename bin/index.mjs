@@ -24,17 +24,19 @@ const runFlow = async () => {
   return { jwt, accessToken };
 };
 
-const runJobs = async ({ jwt, accessToken }) => {
+const runJobs = async ({ jwt, accessToken }, answers) => {
   try {
-    const answers = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'importWalletData',
-        message: 'Do you want to run importWalletData?',
-        default: false,
-      },
-      // Add more prompts for other jobs here
-    ]);
+    if (!answers) {
+      answers = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'importWalletData',
+          message: 'Do you want to run importWalletData?',
+          default: false,
+        },
+        // Add more prompts for other jobs here
+      ]);
+    }
 
     if (answers.importWalletData) {
       try {
@@ -72,25 +74,47 @@ const initialize = async () => {
 const main = async () => {
   await initialize();
 
-  program
-    .command('repeat')
-    .description('Repeats the OAuth flow at specified intervals')
-    .option('-i, --interval <minutes>', 'Interval in minutes')
-    .action(async (options) => {
-      const intervalMs = options.interval ? options.interval * 60 * 1000 : null;
-      const authData = await runFlow();
-      await runJobs(authData);
-      if (intervalMs) {
-        setInterval(async () => {
-          await runJobs(authData);
-        }, intervalMs);
-      }
-    });
+  const authData = await runFlow();
 
-  program.action(async () => {
-    const authData = await runFlow();
-    await runJobs(authData);
-  });
+  const repeatAnswers = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'shouldRepeat',
+      message: 'Do you want to repeat the job execution?',
+      default: false,
+    },
+    {
+      type: 'input',
+      name: 'interval',
+      message: 'Enter the interval in minutes:',
+      when: (answers) => answers.shouldRepeat,
+      validate: (input) => {
+        const num = parseInt(input, 10);
+        return !isNaN(num) && num > 0
+          ? true
+          : 'Please enter a valid number greater than 0';
+      },
+    },
+  ]);
+
+  const initialAnswers = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'importWalletData',
+      message: 'Do you want to run importWalletData?',
+      default: false,
+    },
+    // Add more prompts for other jobs here
+  ]);
+
+  await runJobs(authData, initialAnswers);
+
+  if (repeatAnswers.shouldRepeat) {
+    const intervalMs = repeatAnswers.interval * 60 * 1000;
+    setInterval(async () => {
+      await runJobs(authData, initialAnswers);
+    }, intervalMs);
+  }
 
   program.parse(process.argv);
 };
