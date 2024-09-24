@@ -8,6 +8,7 @@ import { runOAuthFlow } from '../src/lib/eve-esi/esiOauthNative.mjs';
 import { importWalletData } from '../src/lib/eve-esi/walletService.mjs';
 import dotenv from 'dotenv';
 import sequelize from '../src/utils/sequelizeClient.mjs';
+import { importCsvToDb } from '../src/utils/csvWalletHistory.mjs';
 
 dotenv.config();
 
@@ -24,39 +25,44 @@ const runFlow = async () => {
   return { jwt, accessToken };
 };
 
-const runJobs = async ({ jwt, accessToken }, answers) => {
-  try {
-    if (!answers) {
-      answers = await inquirer.prompt([
-        {
-          type: 'confirm',
-          name: 'importWalletData',
-          message: 'Do you want to run importWalletData?',
-          default: false,
-        },
-        // Add more prompts for other jobs here
-      ]);
-    }
+const runJobs = async ({ jwt, accessToken }) => {
+  const answers = await inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'importWalletData',
+      message: 'Do you want to run importWalletData?',
+      default: false,
+    },
+    {
+      type: 'confirm',
+      name: 'importCsvToDb',
+      message: 'Do you want to import CSV data to the database?',
+      default: false,
+    },
+    // Add more prompts for other jobs here
+  ]);
 
-    if (answers.importWalletData) {
-      try {
-        await importWalletData(jwt, accessToken);
-        console.log(chalk.green('importWalletData completed successfully.'));
-      } catch (error) {
-        console.error(
-          chalk.red(`Error during importWalletData: ${error.message}`),
-        );
-      }
-    }
-
-    // Add more job executions here based on user answers
-  } catch (error) {
-    if (error instanceof inquirer.errors.ExitPromptError) {
-      console.log(chalk.yellow('Prompt was forcefully closed by the user.'));
-    } else {
-      console.error(chalk.red(`Unexpected error: ${error.message}`));
+  if (answers.importWalletData) {
+    try {
+      await importWalletData(jwt, accessToken);
+      console.log(chalk.green('importWalletData completed successfully.'));
+    } catch (error) {
+      console.error(
+        chalk.red(`Error during importWalletData: ${error.message}`),
+      );
     }
   }
+
+  if (answers.importCsvToDb) {
+    try {
+      await importCsvToDb();
+      console.log(chalk.green('importCsvToDb completed successfully.'));
+    } catch (error) {
+      console.error(chalk.red(`Error during importCsvToDb: ${error.message}`));
+    }
+  }
+
+  // Add more job executions here based on user answers
 };
 
 const initialize = async () => {
@@ -71,52 +77,26 @@ const initialize = async () => {
   }
 };
 
-const main = async () => {
+program
+  .command('repeat')
+  .description('Repeats the OAuth flow at specified intervals')
+  .option('-i, --interval <minutes>', 'Interval in minutes')
+  .action(async (options) => {
+    await initialize();
+    const intervalMs = options.interval ? options.interval * 60 * 1000 : null;
+    const authData = await runFlow();
+    await runJobs(authData);
+    if (intervalMs) {
+      setInterval(async () => {
+        await runJobs(authData);
+      }, intervalMs);
+    }
+  });
+
+program.action(async () => {
   await initialize();
-
   const authData = await runFlow();
+  await runJobs(authData);
+});
 
-  const repeatAnswers = await inquirer.prompt([
-    {
-      type: 'confirm',
-      name: 'shouldRepeat',
-      message: 'Do you want to repeat the job execution?',
-      default: false,
-    },
-    {
-      type: 'input',
-      name: 'interval',
-      message: 'Enter the interval in minutes:',
-      when: (answers) => answers.shouldRepeat,
-      validate: (input) => {
-        const num = parseInt(input, 10);
-        return !isNaN(num) && num > 0
-          ? true
-          : 'Please enter a valid number greater than 0';
-      },
-    },
-  ]);
-
-  const initialAnswers = await inquirer.prompt([
-    {
-      type: 'confirm',
-      name: 'importWalletData',
-      message: 'Do you want to run importWalletData?',
-      default: false,
-    },
-    // Add more prompts for other jobs here
-  ]);
-
-  await runJobs(authData, initialAnswers);
-
-  if (repeatAnswers.shouldRepeat) {
-    const intervalMs = repeatAnswers.interval * 60 * 1000;
-    setInterval(async () => {
-      await runJobs(authData, initialAnswers);
-    }, intervalMs);
-  }
-
-  program.parse(process.argv);
-};
-
-main();
+program.parse(process.argv);
