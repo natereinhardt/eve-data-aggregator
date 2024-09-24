@@ -5,7 +5,7 @@ export async function importWalletData(jwt, accessToken) {
   const characterName = jwt['name'];
   const corporationId = process.env.CORPORATION_ID;
 
-  for (let walletDivision = 1; walletDivision <= 6; walletDivision++) {
+  for (let walletDivision = 1; walletDivision <= 7; walletDivision++) {
     let page = 1;
     let hasMorePages = true;
 
