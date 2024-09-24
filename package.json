@@ -20,7 +20,8 @@
     "jsonwebtoken": "^9.0.2",
     "jwk-to-pem": "^2.0.6",
     "mysql2": "^3.11.3",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "sequelize": "^6.37.3"
   },
   "bin": {
     "eve-import-cli": "./bin/index.mjs"
