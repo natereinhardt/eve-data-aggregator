@@ -4,13 +4,28 @@ import { URLSearchParams } from 'url';
 import { validateEveJwt } from './validateJwt.mjs';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
+import { findByJobName, upsertAuthData } from '../service/tokenService.mjs'; // Adjust the path as necessary
 
-export async function runOAuthFlow() {
-  console.log(
-    chalk.yellow(
-      'Takes you through a local example of the OAuth 2.0 native flow.',
-    ),
-  );
+export async function runOAuthFlow(job) {
+  console.log(chalk.blue(`Running auth for job: ${job}`));
+  const existingToken = await findByJobName(job);
+  if (existingToken) {
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds since epoch
+    console.log(chalk.blue(`Current time: ${currentTime}`));
+    console.log(chalk.blue(`Token expiry time: ${existingToken.exp}`));
+    if (existingToken.exp > currentTime) {
+      console.log(
+        chalk.green(`Token already exists and is valid for job: ${job}`),
+      );
+      return refreshToken(existingToken);
+    } else {
+      console.log(
+        chalk.yellow(
+          `Token for job: ${job} has expired. Starting OAuth flow to get a new token...`,
+        ),
+      );
+    }
+  }
 
   const { codeVerifier, codeChallenge } = generateCodeVerifierAndChallenge();
   const clientId = process.env.CLIENT_ID;
@@ -18,7 +33,14 @@ export async function runOAuthFlow() {
   printAuthUrl(clientId, codeChallenge);
   const authCode = await promptAuthorizationCode();
 
-  return await requestAuthorizationToken(authCode, clientId, codeVerifier);
+  const authData = await requestAuthorizationToken(
+    authCode,
+    clientId,
+    codeVerifier,
+    job,
+  );
+  await upsertAuthData(authData);
+  return authData;
 }
 
 function generateCodeVerifierAndChallenge() {
@@ -42,7 +64,12 @@ function promptAuthorizationCode() {
     .then((answers) => answers.authCode);
 }
 
-async function requestAuthorizationToken(authCode, clientId, codeVerifier) {
+async function requestAuthorizationToken(
+  authCode,
+  clientId,
+  codeVerifier,
+  job,
+) {
   const formValues = {
     grant_type: 'authorization_code',
     code: authCode,
@@ -53,7 +80,7 @@ async function requestAuthorizationToken(authCode, clientId, codeVerifier) {
 
   try {
     const ssoResponse = await sendTokenRequest(formValues);
-    return await handleSsoTokenResponse(ssoResponse);
+    return await handleSsoTokenResponse(ssoResponse, job);
   } catch (error) {
     console.error(chalk.red('Error during the OAuth 2.0 flow:'), error);
     throw error; // Ensure the error is propagated
@@ -116,16 +143,27 @@ export async function sendTokenRequest(formValues, addHeaders = {}) {
   return res;
 }
 
-export async function handleSsoTokenResponse(ssoResponse) {
+export async function handleSsoTokenResponse(ssoResponse, job) {
   if (ssoResponse.ok) {
     const data = await ssoResponse.json();
+    console.log('ssoResponse', data);
     const accessToken = data['access_token'];
-
     console.log(chalk.green('\nVerifying access token JWT...'));
 
     const jwt = await validateEveJwt(accessToken);
     console.log(chalk.green(JSON.stringify(jwt, null, 2)));
 
+    const AuthData = {
+      ...data,
+      scp: jwt.scp,
+      sub: jwt.sub,
+      name: jwt.name,
+      owner: jwt.owner,
+      exp: jwt.exp,
+      job: job,
+    };
+    await upsertAuthData(AuthData);
+    console.log(chalk.green(JSON.stringify(AuthData, null, 2)));
     return { jwt, accessToken };
   } else {
     console.log(
@@ -144,4 +182,65 @@ export async function handleSsoTokenResponse(ssoResponse) {
     );
     throw new Error('SSO token response error');
   }
+}
+
+export async function refreshToken(existingToken) {
+  console.log(chalk.blue(`Refreshing token for job: ${existingToken.job}`));
+
+  const refreshToken = existingToken.refresh_token;
+  const clientId = process.env.CLIENT_ID;
+
+  const tokenEndpoint = 'https://login.eveonline.com/v2/oauth/token';
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken,
+    client_id: clientId,
+  });
+
+  const response = await fetch(tokenEndpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: body.toString(),
+  });
+
+  if (!response.ok) {
+    console.log(
+      chalk.red(
+        `\nSent request with url: ${response.url} \nbody: ${body.toString()} \nheaders: ${JSON.stringify(response.headers.raw())}`,
+      ),
+    );
+    console.log(chalk.red(`\nSSO response code is: ${response.status}`));
+    console.log(chalk.red(`\nSSO response JSON is: ${await response.json()}`));
+    throw new Error('SSO token response error');
+  }
+
+  const newTokenData = await response.json();
+
+  // Validate the new token
+  const jwt = await validateEveJwt(newTokenData.access_token);
+  if (!jwt) {
+    console.log(chalk.red('The new token is invalid.'));
+    throw new Error('The new token is invalid.');
+  }
+  const authData = {
+    ...newTokenData,
+    id: existingToken.id,
+    scp: jwt.scp,
+    sub: jwt.sub,
+    name: jwt.name,
+    owner: jwt.owner,
+    exp: jwt.exp,
+  };
+
+  await upsertAuthData(authData);
+  console.log(
+    chalk.green(
+      'Token successfully refreshed, validated, and updated in the database.',
+    ),
+  );
+
+  // Return the JWT and access token
+  return { jwt, accessToken: authData.access_token };
 }

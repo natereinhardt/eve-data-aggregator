@@ -65,9 +65,6 @@ export async function importWalletData(jwt, accessToken) {
               `\n${characterName} has ${data.length} wallet journal entries in division ${walletDivision}, page ${page}`,
             ),
           );
-          if (walletDivision === 4) {
-            console.log(data);
-          }
           await upsertJournalEntries(data);
           page++;
         }
