@@ -4,14 +4,22 @@ import { URLSearchParams } from 'url';
 import { validateEveJwt } from './validateJwt.mjs';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
+import { findByJobName, upsertAuthData } from '../service/tokenService.mjs'; // Adjust the path as necessary
 
 export async function runOAuthFlow(job) {
-  console.log('job', job);
+  console.log(chalk.blue(`Running auth for job: ${job}`));
   console.log(
     chalk.yellow(
       'Takes you through a local example of the OAuth 2.0 native flow.',
     ),
   );
+
+  // Check if a token already exists for the given job
+  const existingToken = await findByJobName(job);
+  if (existingToken) {
+    console.log(chalk.green(`Token already exists for job: ${job}`));
+    return existingToken;
+  }
 
   const { codeVerifier, codeChallenge } = generateCodeVerifierAndChallenge();
   const clientId = process.env.CLIENT_ID;
@@ -19,7 +27,7 @@ export async function runOAuthFlow(job) {
   printAuthUrl(clientId, codeChallenge);
   const authCode = await promptAuthorizationCode();
 
-  return await requestAuthorizationToken(authCode, clientId, codeVerifier);
+  return await requestAuthorizationToken(authCode, clientId, codeVerifier, job);
 }
 
 function generateCodeVerifierAndChallenge() {
@@ -43,7 +51,12 @@ function promptAuthorizationCode() {
     .then((answers) => answers.authCode);
 }
 
-async function requestAuthorizationToken(authCode, clientId, codeVerifier) {
+async function requestAuthorizationToken(
+  authCode,
+  clientId,
+  codeVerifier,
+  job,
+) {
   const formValues = {
     grant_type: 'authorization_code',
     code: authCode,
