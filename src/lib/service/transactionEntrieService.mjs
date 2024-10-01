@@ -1,4 +1,3 @@
-import JournalEntry from '../../models/JournalEntry.mjs';
 import chalk from 'chalk';
 
 const models = {
