@@ -35,6 +35,7 @@ const S0b_Holdings_Four_JournalEntry = sequelize.define(
     id: {
       type: DataTypes.BIGINT,
       allowNull: false,
+      primaryKey: true, // Composite primary key
     },
     reason: {
       type: DataTypes.TEXT,
@@ -51,6 +52,7 @@ const S0b_Holdings_Four_JournalEntry = sequelize.define(
     wallet_division: {
       type: DataTypes.SMALLINT,
       allowNull: false,
+      primaryKey: true, // Composite primary key
     },
     transaction_type: {
       type: DataTypes.TINYINT,
@@ -64,7 +66,7 @@ const S0b_Holdings_Four_JournalEntry = sequelize.define(
     },
   },
   {
-    tableName: '1_journal_entries',
+    tableName: '4_journal_entries',
     timestamps: false,
     indexes: [
       { fields: ['transaction_type'] },

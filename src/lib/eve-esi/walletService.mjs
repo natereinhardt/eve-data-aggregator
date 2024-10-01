@@ -1,4 +1,4 @@
-import { bulkUpsertJournalEntries } from '../service/transactionEntrieService.mjs';
+import { upsertJournalEntries } from '../service/transactionEntrieService.mjs';
 import chalk from 'chalk';
 
 export async function importWalletData(jwt, accessToken) {
@@ -68,7 +68,7 @@ export async function importWalletData(jwt, accessToken) {
           if (walletDivision === 4) {
             console.log(data);
           }
-          await bulkUpsertJournalEntries(data);
+          await upsertJournalEntries(data);
           page++;
         }
       } catch (error) {
