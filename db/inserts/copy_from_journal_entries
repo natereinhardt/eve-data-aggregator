@@ -1,0 +1,72 @@
+-- Insert rows from journal_entries to 1_journal_entries where wallet_division = 1
+INSERT INTO 1_journal_entries (amount, balance, context_id, context_id_type, date, description, 
+                                first_party_id, id, reason, ref_type, second_party_id, 
+                                wallet_division, transaction_type)
+SELECT amount, balance, context_id, context_id_type, date, description, 
+       first_party_id, id, reason, ref_type, second_party_id, 
+       wallet_division, transaction_type
+FROM journal_entries
+WHERE wallet_division = 1;
+
+-- Insert rows from journal_entries to 1_journal_entries where wallet_division = 1
+INSERT INTO 2_journal_entries (amount, balance, context_id, context_id_type, date, description, 
+                                first_party_id, id, reason, ref_type, second_party_id, 
+                                wallet_division, transaction_type)
+SELECT amount, balance, context_id, context_id_type, date, description, 
+       first_party_id, id, reason, ref_type, second_party_id, 
+       wallet_division, transaction_type
+FROM journal_entries
+WHERE wallet_division = 2;
+
+-- Insert rows from journal_entries to 1_journal_entries where wallet_division = 1
+INSERT INTO 3_journal_entries (amount, balance, context_id, context_id_type, date, description, 
+                                first_party_id, id, reason, ref_type, second_party_id, 
+                                wallet_division, transaction_type)
+SELECT amount, balance, context_id, context_id_type, date, description, 
+       first_party_id, id, reason, ref_type, second_party_id, 
+       wallet_division, transaction_type
+FROM journal_entries
+WHERE wallet_division = 3;
+
+-- Insert rows from journal_entries to 1_journal_entries where wallet_division = 1
+INSERT INTO 4_journal_entries (amount, balance, context_id, context_id_type, date, description, 
+                                first_party_id, id, reason, ref_type, second_party_id, 
+                                wallet_division, transaction_type)
+SELECT amount, balance, context_id, context_id_type, date, description, 
+       first_party_id, id, reason, ref_type, second_party_id, 
+       wallet_division, transaction_type
+FROM journal_entries
+WHERE wallet_division = 4;
+
+
+-- Insert rows from journal_entries to 1_journal_entries where wallet_division = 1
+INSERT INTO 5_journal_entries (amount, balance, context_id, context_id_type, date, description, 
+                                first_party_id, id, reason, ref_type, second_party_id, 
+                                wallet_division, transaction_type)
+SELECT amount, balance, context_id, context_id_type, date, description, 
+       first_party_id, id, reason, ref_type, second_party_id, 
+       wallet_division, transaction_type
+FROM journal_entries
+WHERE wallet_division = 5;
+
+
+-- Insert rows from journal_entries to 1_journal_entries where wallet_division = 1
+INSERT INTO 6_journal_entries (amount, balance, context_id, context_id_type, date, description, 
+                                first_party_id, id, reason, ref_type, second_party_id, 
+                                wallet_division, transaction_type)
+SELECT amount, balance, context_id, context_id_type, date, description, 
+       first_party_id, id, reason, ref_type, second_party_id, 
+       wallet_division, transaction_type
+FROM journal_entries
+WHERE wallet_division = 6;
+
+
+-- Insert rows from journal_entries to 1_journal_entries where wallet_division = 1
+INSERT INTO 7_journal_entries (amount, balance, context_id, context_id_type, date, description, 
+                                first_party_id, id, reason, ref_type, second_party_id, 
+                                wallet_division, transaction_type)
+SELECT amount, balance, context_id, context_id_type, date, description, 
+       first_party_id, id, reason, ref_type, second_party_id, 
+       wallet_division, transaction_type
+FROM journal_entries
+WHERE wallet_division = 7;

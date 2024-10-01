@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse';
 import { sanitizeEntry } from './helpers.mjs';
-import { bulkUpsertJournalEntries } from '../lib/service/transactionEntrieService.mjs';
+import { upsertJournalEntries } from '../lib/service/transactionEntrieService.mjs';
 import chalk from 'chalk';
 
 export async function importCsvToDb() {
@@ -32,7 +32,7 @@ export async function importCsvToDb() {
     parser.on('end', async () => {
       try {
         console.log(chalk.blue('CSV file successfully processed.'));
-        await bulkUpsertJournalEntries(entries);
+        await upsertJournalEntries(entries);
         console.log(
           chalk.green('Data successfully inserted into the database.'),
         );

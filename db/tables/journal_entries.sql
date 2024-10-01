@@ -12,6 +12,8 @@ CREATE TABLE journal_entries (
     second_party_id BIGINT,
     wallet_division SMALLINT,
     transaction_type TINYINT,
+    unique_id VARCHAR(255) GENERATED ALWAYS AS (CONCAT(id, '-', wallet_division)) STORED, -- Stored Generated Column
+    PRIMARY KEY (id, wallet_division), -- Composite Primary Key
     INDEX idx_transaction_type (transaction_type),
     INDEX idx_date (date),
     INDEX idx_context_id_type (context_id_type)
