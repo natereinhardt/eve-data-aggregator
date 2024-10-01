@@ -20,16 +20,11 @@ console.log(
   ),
 );
 
-const runFlow = async () => {
-  const { jwt, accessToken } = await runOAuthFlow();
-  return { jwt, accessToken };
-};
-
-const runJobs = async ({ jwt, accessToken }) => {
+const runJobs = async () => {
   const answers = await inquirer.prompt([
     {
       type: 'confirm',
-      name: 'importWalletData',
+      name: 'importS0bHoldingsWalletData',
       message: 'Do you want to run importWalletData?',
       default: false,
     },
@@ -42,10 +37,14 @@ const runJobs = async ({ jwt, accessToken }) => {
     // Add more prompts for other jobs here
   ]);
 
-  if (answers.importWalletData) {
+  if (answers.importS0bHoldingsWalletData) {
     try {
+      const authData = await runOAuthFlow('importS0bHoldingsWalletData');
+      const { jwt, accessToken } = authData;
       await importWalletData(jwt, accessToken);
-      console.log(chalk.green('importWalletData completed successfully.'));
+      console.log(
+        chalk.green('importS0bHoldingsWalletData completed successfully.'),
+      );
     } catch (error) {
       console.error(
         chalk.red(`Error during importWalletData: ${error.message}`),
@@ -84,19 +83,17 @@ program
   .action(async (options) => {
     await initialize();
     const intervalMs = options.interval ? options.interval * 60 * 1000 : null;
-    const authData = await runFlow();
-    await runJobs(authData);
+    await runJobs();
     if (intervalMs) {
       setInterval(async () => {
-        await runJobs(authData);
+        await runJobs(auhData);
       }, intervalMs);
     }
   });
 
 program.action(async () => {
   await initialize();
-  const authData = await runFlow();
-  await runJobs(authData);
+  await runJobs();
 });
 
 program.parse(process.argv);

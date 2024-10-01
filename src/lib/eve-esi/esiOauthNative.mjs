@@ -5,7 +5,8 @@ import { validateEveJwt } from './validateJwt.mjs';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 
-export async function runOAuthFlow() {
+export async function runOAuthFlow(job) {
+  console.log('job', job);
   console.log(
     chalk.yellow(
       'Takes you through a local example of the OAuth 2.0 native flow.',
@@ -119,13 +120,21 @@ export async function sendTokenRequest(formValues, addHeaders = {}) {
 export async function handleSsoTokenResponse(ssoResponse) {
   if (ssoResponse.ok) {
     const data = await ssoResponse.json();
+    console.log('ssoResponse', data);
     const accessToken = data['access_token'];
-
     console.log(chalk.green('\nVerifying access token JWT...'));
 
     const jwt = await validateEveJwt(accessToken);
     console.log(chalk.green(JSON.stringify(jwt, null, 2)));
-
+    const AuthData = {
+      ...data,
+      scp: jwt.scp,
+      sub: jwt.sub,
+      name: jwt.name,
+      owner: jwt.owner,
+      exp: jwt.exp,
+    };
+    console.log(chalk.green(JSON.stringify(AuthData, null, 2)));
     return { jwt, accessToken };
   } else {
     console.log(
