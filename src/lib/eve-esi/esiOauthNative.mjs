@@ -8,18 +8,23 @@ import { findByJobName, upsertAuthData } from '../service/tokenService.mjs'; // 
 
 export async function runOAuthFlow(job) {
   console.log(chalk.blue(`Running auth for job: ${job}`));
-  console.log(
-    chalk.yellow(
-      'Takes you through a local example of the OAuth 2.0 native flow.',
-    ),
-  );
-
-  // Check if a token already exists for the given job
   const existingToken = await findByJobName(job);
   if (existingToken) {
-    console.log(chalk.green(`Token already exists for job: ${job}`));
-    return refreshToken(existingToken);
-    //return existingToken;
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds since epoch
+    console.log(chalk.blue(`Current time: ${currentTime}`));
+    console.log(chalk.blue(`Token expiry time: ${existingToken.exp}`));
+    if (existingToken.exp > currentTime) {
+      console.log(
+        chalk.green(`Token already exists and is valid for job: ${job}`),
+      );
+      return refreshToken(existingToken);
+    } else {
+      console.log(
+        chalk.yellow(
+          `Token for job: ${job} has expired. Starting OAuth flow to get a new token...`,
+        ),
+      );
+    }
   }
 
   const { codeVerifier, codeChallenge } = generateCodeVerifierAndChallenge();
@@ -28,7 +33,14 @@ export async function runOAuthFlow(job) {
   printAuthUrl(clientId, codeChallenge);
   const authCode = await promptAuthorizationCode();
 
-  return await requestAuthorizationToken(authCode, clientId, codeVerifier, job);
+  const authData = await requestAuthorizationToken(
+    authCode,
+    clientId,
+    codeVerifier,
+    job,
+  );
+  await upsertAuthData(authData);
+  return authData;
 }
 
 function generateCodeVerifierAndChallenge() {
@@ -205,20 +217,22 @@ export async function refreshToken(existingToken) {
   }
 
   const newTokenData = await response.json();
-  const authData = {
-    ...existingToken,
-    access_token: newTokenData.access_token,
-    expires_in: newTokenData.expires_in,
-    refresh_token: newTokenData.refresh_token || refreshToken, // Use the new refresh token if provided
-    exp: newTokenData.expires_in + Math.floor(Date.now() / 1000), // Calculate new expiry time
-  };
 
   // Validate the new token
-  const jwt = await validateEveJwt(authData.access_token);
+  const jwt = await validateEveJwt(newTokenData.access_token);
   if (!jwt) {
     console.log(chalk.red('The new token is invalid.'));
     throw new Error('The new token is invalid.');
   }
+  const authData = {
+    ...newTokenData,
+    id: existingToken.id,
+    scp: jwt.scp,
+    sub: jwt.sub,
+    name: jwt.name,
+    owner: jwt.owner,
+    exp: jwt.exp,
+  };
 
   await upsertAuthData(authData);
   console.log(
