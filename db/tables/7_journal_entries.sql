@@ -1,4 +1,5 @@
-CREATE TABLE journal_entries (
+
+CREATE TABLE 7_journal_entries (
     amount DECIMAL(15, 2),
     balance DECIMAL(15, 2),
     context_id BIGINT,
@@ -6,7 +7,7 @@ CREATE TABLE journal_entries (
     date DATETIME,
     description TEXT,
     first_party_id BIGINT,
-    id BIGINT PRIMARY KEY,
+    id BIGINT,
     reason TEXT,
     ref_type VARCHAR(255),
     second_party_id BIGINT,

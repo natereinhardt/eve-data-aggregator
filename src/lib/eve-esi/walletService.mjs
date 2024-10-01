@@ -10,7 +10,7 @@ export async function importWalletData(jwt, accessToken) {
     let hasMorePages = true;
 
     while (hasMorePages) {
-      const walletPath = `https://esi.evetech.net/latest/corporations/${corporationId}/wallets/${walletDivision}/journal/?page=${page}`;
+      const walletPath = `https://esi.evetech.net/latest/corporations/${corporationId}/wallets/${walletDivision}/journal/?datasource=tranquility&page=${page}`;
 
       console.log(
         chalk.blue(
@@ -65,6 +65,9 @@ export async function importWalletData(jwt, accessToken) {
               `\n${characterName} has ${data.length} wallet journal entries in division ${walletDivision}, page ${page}`,
             ),
           );
+          if (walletDivision === 4) {
+            console.log(data);
+          }
           await bulkUpsertJournalEntries(data);
           page++;
         }
