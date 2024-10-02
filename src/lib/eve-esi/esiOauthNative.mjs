@@ -13,18 +13,18 @@ export async function runOAuthFlow(job) {
     const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds since epoch
     console.log(chalk.blue(`Current time: ${currentTime}`));
     console.log(chalk.blue(`Token expiry time: ${existingToken.exp}`));
-    if (existingToken.exp > currentTime) {
-      console.log(
-        chalk.green(`Token already exists and is valid for job: ${job}`),
-      );
-      return refreshToken(existingToken);
-    } else {
-      console.log(
-        chalk.yellow(
-          `Token for job: ${job} has expired. Starting OAuth flow to get a new token...`,
-        ),
-      );
-    }
+    // if (existingToken.exp > currentTime) {
+    console.log(
+      chalk.green(`Token already exists and is valid for job: ${job}`),
+    );
+    return refreshToken(existingToken);
+    // } else {
+    //   console.log(
+    //     chalk.yellow(
+    //       `Token for job: ${job} has expired. Starting OAuth flow to get a new token...`,
+    //     ),
+    //   );
+    // }
   }
 
   const { codeVerifier, codeChallenge } = generateCodeVerifierAndChallenge();
