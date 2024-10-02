@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import { program } from 'commander';
 import chalk from 'chalk';
 import figlet from 'figlet';
@@ -20,24 +18,31 @@ console.log(
   ),
 );
 
-const runJobs = async () => {
-  const answers = await inquirer.prompt([
-    {
-      type: 'confirm',
-      name: 'importS0bHoldingsWalletData',
-      message: 'Do you want to run importWalletData?',
-      default: false,
-    },
-    {
-      type: 'confirm',
-      name: 'importCsvToDb',
-      message: 'Do you want to import CSV data to the database?',
-      default: false,
-    },
-    // Add more prompts for other jobs here
-  ]);
+let jobSelections = {};
 
-  if (answers.importS0bHoldingsWalletData) {
+const runJobs = async () => {
+  if (
+    !jobSelections.importS0bHoldingsWalletData &&
+    !jobSelections.importCsvToDb
+  ) {
+    jobSelections = await inquirer.prompt([
+      {
+        type: 'confirm',
+        name: 'importS0bHoldingsWalletData',
+        message: 'Do you want to run importWalletData?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'importCsvToDb',
+        message: 'Do you want to import CSV data to the database?',
+        default: false,
+      },
+      // Add more prompts for other jobs here
+    ]);
+  }
+
+  if (jobSelections.importS0bHoldingsWalletData) {
     try {
       const authData = await runOAuthFlow('importS0bHoldingsWalletData');
       const { jwt, accessToken } = authData;
@@ -52,7 +57,7 @@ const runJobs = async () => {
     }
   }
 
-  if (answers.importCsvToDb) {
+  if (jobSelections.importCsvToDb) {
     try {
       await importCsvToDb();
       console.log(chalk.green('importCsvToDb completed successfully.'));
@@ -76,24 +81,39 @@ const initialize = async () => {
   }
 };
 
-program
-  .command('repeat')
-  .description('Repeats the OAuth flow at specified intervals')
-  .option('-i, --interval <minutes>', 'Interval in minutes')
-  .action(async (options) => {
-    await initialize();
-    const intervalMs = options.interval ? options.interval * 60 * 1000 : null;
-    await runJobs();
-    if (intervalMs) {
-      setInterval(async () => {
-        await runJobs(auhData);
-      }, intervalMs);
-    }
-  });
+const main = async () => {
+  await initialize();
+
+  const intervalAnswer = await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'interval',
+      message:
+        'Enter the interval in minutes to repeat the jobs (leave blank for no repeat):',
+      validate: (input) => {
+        if (input === '' || !isNaN(input)) {
+          return true;
+        }
+        return 'Please enter a valid number.';
+      },
+    },
+  ]);
+
+  const intervalMs = intervalAnswer.interval
+    ? parseInt(intervalAnswer.interval) * 60 * 1000
+    : null;
+
+  await runJobs();
+
+  if (intervalMs) {
+    setInterval(async () => {
+      await runJobs();
+    }, intervalMs);
+  }
+};
 
 program.action(async () => {
-  await initialize();
-  await runJobs();
+  await main();
 });
 
 program.parse(process.argv);
