@@ -105,8 +105,12 @@ const main = async () => {
 
   await runJobs();
 
+  let iterationCount = 0;
+
   if (intervalMs) {
     setInterval(async () => {
+      iterationCount++;
+      console.log(chalk.blue(`Iteration count: ${iterationCount}`));
       await runJobs();
     }, intervalMs);
   }
