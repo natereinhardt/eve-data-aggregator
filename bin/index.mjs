@@ -6,6 +6,7 @@ import { runOAuthFlow } from '../src/lib/eve-esi/esiOauthNative.mjs';
 import { importWalletData } from '../src/lib/eve-esi/walletService.mjs';
 import dotenv from 'dotenv';
 import sequelize from '../src/utils/sequelizeClient.mjs';
+import  structSequelize  from '../src/utils/structSequelizeClient.mjs';
 import { importCsvToDb } from '../src/utils/csvWalletHistory.mjs';
 
 dotenv.config();
@@ -23,7 +24,8 @@ let jobSelections = {};
 const runJobs = async () => {
   if (
     !jobSelections.importS0bHoldingsWalletData &&
-    !jobSelections.importCsvToDb
+    !jobSelections.importCsvToDb &&
+    !jobSelections.importS0bStructureManagementWalletData
   ) {
     jobSelections = await inquirer.prompt([
       {
@@ -36,6 +38,12 @@ const runJobs = async () => {
         type: 'confirm',
         name: 'importCsvToDb',
         message: 'Do you want to import CSV data to the database?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'importS0bStructureManagementWalletData',
+        message: 'Do you want to import S0b Structure Management Wallet Data?',
         default: false,
       },
       // Add more prompts for other jobs here
@@ -66,6 +74,27 @@ const runJobs = async () => {
     }
   }
 
+  if (jobSelections.importS0bStructureManagementWalletData) {
+    try {
+      const authData = await runOAuthFlow(
+        'importS0bStructureManagementWalletData',
+      );
+      const { jwt, accessToken } = authData;
+      await importWalletData(jwt, accessToken);
+      console.log(
+        chalk.green(
+          'importS0bStructureManagementWalletData completed successfully.',
+        ),
+      );
+    } catch (error) {
+      console.error(
+        chalk.red(
+          `Error during importStructureManagementWalletData: ${error.message}`,
+        ),
+      );
+    }
+  }
+
   // Add more job executions here based on user answers
 };
 
@@ -73,7 +102,16 @@ const initialize = async () => {
   try {
     await sequelize.authenticate();
     console.log(
-      chalk.green('Database connection has been established successfully.'),
+      chalk.green(
+        'Database connection to S0b has been established successfully.',
+      ),
+    );
+
+    await structSequelize.authenticate();
+    console.log(
+      chalk.green(
+        'Database connection to S0b_Struct has been established successfully.',
+      ),
     );
   } catch (err) {
     console.error(chalk.red('Unable to connect to the database:', err));
