@@ -31,3 +31,6 @@ FROM S0b_Struct.6_journal_entries
 UNION ALL
 SELECT *, CAST(date AS DATE) AS entry_date
 FROM S0b_Struct.7_journal_entries;
+
+
+GRANT ALL PRIVILEGES ON S0b_Struct.* TO S0b_Admin;
