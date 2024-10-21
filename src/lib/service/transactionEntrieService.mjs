@@ -10,16 +10,17 @@ const models = {
   7: 'Seven_JournalEntry',
 };
 
-async function getModel(wallet_division) {
+async function getModel(wallet_division, sequelizeInstance) {
   const modelName = models[wallet_division];
   if (!modelName) {
     throw new Error(`No model found for wallet_division ${wallet_division}`);
   }
-  const model = await import(`../../models/${modelName}.mjs`);
-  return model.default;
+  const modelModule = await import(`../../models/${modelName}.mjs`);
+  const defineModel = modelModule.default;
+  return defineModel(sequelizeInstance);
 }
 
-export async function upsertJournalEntries(entries) {
+export async function upsertJournalEntries(entries, sequelizeInstance) {
   const groupedEntries = entries.reduce((acc, entry) => {
     const { wallet_division } = entry;
     if (!acc[wallet_division]) {
@@ -30,7 +31,7 @@ export async function upsertJournalEntries(entries) {
   }, {});
 
   for (const [wallet_division, entries] of Object.entries(groupedEntries)) {
-    const model = await getModel(wallet_division);
+    const model = await getModel(wallet_division, sequelizeInstance);
     if (model) {
       const result = await model.bulkCreate(entries, {
         updateOnDuplicate: [

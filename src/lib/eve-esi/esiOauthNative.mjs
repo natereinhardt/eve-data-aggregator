@@ -6,9 +6,9 @@ import chalk from 'chalk';
 import inquirer from 'inquirer';
 import { findByJobName, upsertAuthData } from '../service/tokenService.mjs'; // Adjust the path as necessary
 
-export async function runOAuthFlow(job) {
+export async function runOAuthFlow(job, sequelizeInstance) {
   console.log(chalk.blue(`Running auth for job: ${job}`));
-  const existingToken = await findByJobName(job);
+  const existingToken = await findByJobName(job, sequelizeInstance);
   if (existingToken) {
     const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds since epoch
     console.log(chalk.blue(`Current time: ${currentTime}`));
@@ -17,7 +17,7 @@ export async function runOAuthFlow(job) {
     console.log(
       chalk.green(`Token already exists and is valid for job: ${job}`),
     );
-    return refreshToken(existingToken);
+    return refreshToken(existingToken, job, sequelizeInstance);
     // } else {
     //   console.log(
     //     chalk.yellow(
@@ -38,8 +38,9 @@ export async function runOAuthFlow(job) {
     clientId,
     codeVerifier,
     job,
+    sequelizeInstance,
   );
-  await upsertAuthData(authData);
+  await upsertAuthData(authData, job, sequelizeInstance);
   return authData;
 }
 
@@ -69,6 +70,7 @@ async function requestAuthorizationToken(
   clientId,
   codeVerifier,
   job,
+  sequelizeInstance,
 ) {
   const formValues = {
     grant_type: 'authorization_code',
@@ -80,7 +82,7 @@ async function requestAuthorizationToken(
 
   try {
     const ssoResponse = await sendTokenRequest(formValues);
-    return await handleSsoTokenResponse(ssoResponse, job);
+    return await handleSsoTokenResponse(ssoResponse, job, sequelizeInstance);
   } catch (error) {
     console.error(chalk.red('Error during the OAuth 2.0 flow:'), error);
     throw error; // Ensure the error is propagated
@@ -143,7 +145,11 @@ export async function sendTokenRequest(formValues, addHeaders = {}) {
   return res;
 }
 
-export async function handleSsoTokenResponse(ssoResponse, job) {
+export async function handleSsoTokenResponse(
+  ssoResponse,
+  job,
+  sequelizeInstance,
+) {
   if (ssoResponse.ok) {
     const data = await ssoResponse.json();
     console.log('ssoResponse', data);
@@ -162,7 +168,7 @@ export async function handleSsoTokenResponse(ssoResponse, job) {
       exp: jwt.exp,
       job: job,
     };
-    await upsertAuthData(AuthData);
+    await upsertAuthData(AuthData, job, sequelizeInstance);
     console.log(chalk.green(JSON.stringify(AuthData, null, 2)));
     return { jwt, accessToken };
   } else {
@@ -184,7 +190,7 @@ export async function handleSsoTokenResponse(ssoResponse, job) {
   }
 }
 
-export async function refreshToken(existingToken) {
+export async function refreshToken(existingToken, job, sequelizeInstance) {
   console.log(chalk.blue(`Refreshing token for job: ${existingToken.job}`));
 
   const refreshToken = existingToken.refresh_token;
@@ -234,7 +240,7 @@ export async function refreshToken(existingToken) {
     exp: jwt.exp,
   };
 
-  await upsertAuthData(authData);
+  await upsertAuthData(authData, job, sequelizeInstance);
   console.log(
     chalk.green(
       'Token successfully refreshed, validated, and updated in the database.',

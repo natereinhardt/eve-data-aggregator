@@ -13,3 +13,14 @@ INSERT INTO wallets (Id, Name) VALUES
 (5, 'S0b Buy Back Account'),
 (6, 'S0b Production Wallet'),
 (7, 'S0b Rental Wallet');
+
+
+-- Insert the data
+INSERT INTO S0b_Struct.wallets (Id, Name) VALUES
+(1, 'Master Wallet'),
+(2, 'Structures'),
+(3, 'System Upgrades'),
+(4, 'Structure Upgrades'),
+(5, 'Fuel Wallet'),
+(6, 'Ore Tax'),
+(7, 'Overflow');

@@ -1,15 +1,19 @@
 import { upsertJournalEntries } from '../service/transactionEntrieService.mjs';
 import chalk from 'chalk';
 
-export async function importWalletData(jwt, accessToken) {
+export async function importWalletData(
+  jwt,
+  accessToken,
+  sequelizeInstance,
+  corporationId,
+) {
   const characterName = jwt['name'];
-  const corporationId = process.env.CORPORATION_ID;
 
   for (let walletDivision = 1; walletDivision <= 7; walletDivision++) {
     let page = 1;
     let hasMorePages = true;
 
-    while (hasMorePages) {
+    while (hasMorePages && page <= 10) {
       const walletPath = `https://esi.evetech.net/latest/corporations/${corporationId}/wallets/${walletDivision}/journal/?datasource=tranquility&page=${page}`;
 
       console.log(
@@ -23,7 +27,7 @@ export async function importWalletData(jwt, accessToken) {
       };
 
       try {
-        const res = await fetch(walletPath, { headers: headers });
+        const res = await fetchWithRetry(walletPath, { headers: headers });
         console.log(
           chalk.cyan(
             `\nMade request to ${walletPath} with headers: ${JSON.stringify(
@@ -46,8 +50,21 @@ export async function importWalletData(jwt, accessToken) {
           continue;
         }
 
+        if (res.status === 404) {
+          console.log(
+            chalk.yellow(
+              `Page ${page} does not exist for wallet division ${walletDivision}. Stopping pagination.`,
+            ),
+          );
+          hasMorePages = false;
+          break;
+        }
+
         if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
+          const errorText = await res.text(); // Read the response body as text
+          throw new Error(
+            `HTTP error! status: ${res.status}, body: ${errorText}`,
+          );
         }
 
         const data = await res.json();
@@ -65,7 +82,7 @@ export async function importWalletData(jwt, accessToken) {
               `\n${characterName} has ${data.length} wallet journal entries in division ${walletDivision}, page ${page}`,
             ),
           );
-          await upsertJournalEntries(data);
+          await upsertJournalEntries(data, sequelizeInstance);
           page++;
         }
       } catch (error) {
@@ -79,3 +96,29 @@ export async function importWalletData(jwt, accessToken) {
     }
   }
 }
+const fetchWithRetry = async (url, options, retries = 3) => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, options);
+      if (res.status === 504) {
+        const body = await res.json();
+        if (
+          body.error === 'Timeout contacting tranquility' &&
+          body.timeout === 10
+        ) {
+          if (attempt < retries) {
+            console.log(`Retrying... Attempt ${attempt} of ${retries}`);
+            continue;
+          } else {
+            throw new Error(`Failed after ${retries} attempts`);
+          }
+        }
+      }
+      return res;
+    } catch (error) {
+      if (attempt >= retries) {
+        throw error;
+      }
+    }
+  }
+};
