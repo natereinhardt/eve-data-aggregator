@@ -6,7 +6,7 @@ import { runOAuthFlow } from '../src/lib/eve-esi/esiOauthNative.mjs';
 import { importWalletData } from '../src/lib/eve-esi/walletService.mjs';
 import dotenv from 'dotenv';
 import sequelize from '../src/utils/sequelizeClient.mjs';
-import  structSequelize  from '../src/utils/structSequelizeClient.mjs';
+import structSequelize from '../src/utils/structSequelizeClient.mjs';
 import { importCsvToDb } from '../src/utils/csvWalletHistory.mjs';
 
 dotenv.config();
@@ -34,12 +34,12 @@ const runJobs = async () => {
         message: 'Do you want to run importWalletData?',
         default: false,
       },
-      {
-        type: 'confirm',
-        name: 'importCsvToDb',
-        message: 'Do you want to import CSV data to the database?',
-        default: false,
-      },
+      // {
+      //   type: 'confirm',
+      //   name: 'importCsvToDb',
+      //   message: 'Do you want to import CSV data to the database?',
+      //   default: false,
+      // },
       {
         type: 'confirm',
         name: 'importS0bStructureManagementWalletData',
@@ -52,9 +52,17 @@ const runJobs = async () => {
 
   if (jobSelections.importS0bHoldingsWalletData) {
     try {
-      const authData = await runOAuthFlow('importS0bHoldingsWalletData');
+      const authData = await runOAuthFlow(
+        'importS0bHoldingsWalletData',
+        sequelize,
+      );
       const { jwt, accessToken } = authData;
-      await importWalletData(jwt, accessToken);
+      await importWalletData(
+        jwt,
+        accessToken,
+        sequelize,
+        process.env.CORPORATION_ID,
+      );
       console.log(
         chalk.green('importS0bHoldingsWalletData completed successfully.'),
       );
@@ -78,9 +86,15 @@ const runJobs = async () => {
     try {
       const authData = await runOAuthFlow(
         'importS0bStructureManagementWalletData',
+        structSequelize,
       );
       const { jwt, accessToken } = authData;
-      await importWalletData(jwt, accessToken);
+      await importWalletData(
+        jwt,
+        accessToken,
+        structSequelize,
+        process.env.STRUCT_CORPORATION_ID,
+      );
       console.log(
         chalk.green(
           'importS0bStructureManagementWalletData completed successfully.',

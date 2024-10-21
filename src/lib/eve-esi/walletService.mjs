@@ -1,9 +1,13 @@
 import { upsertJournalEntries } from '../service/transactionEntrieService.mjs';
 import chalk from 'chalk';
 
-export async function importWalletData(jwt, accessToken) {
+export async function importWalletData(
+  jwt,
+  accessToken,
+  sequelizeInstance,
+  corporationId,
+) {
   const characterName = jwt['name'];
-  const corporationId = process.env.CORPORATION_ID;
 
   for (let walletDivision = 1; walletDivision <= 7; walletDivision++) {
     let page = 1;
@@ -78,7 +82,7 @@ export async function importWalletData(jwt, accessToken) {
               `\n${characterName} has ${data.length} wallet journal entries in division ${walletDivision}, page ${page}`,
             ),
           );
-          await upsertJournalEntries(data);
+          await upsertJournalEntries(data, sequelizeInstance);
           page++;
         }
       } catch (error) {

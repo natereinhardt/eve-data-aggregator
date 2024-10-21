@@ -1,21 +1,28 @@
-import Token from '../../models/Tokens.mjs'; // Adjust the path as necessary
 import chalk from 'chalk';
 
-export async function upsertAuthData(authData) {
+async function getTokenModel(sequelizeInstance) {
+  const modelModule = await import(`../../models/Tokens.mjs`);
+  const defineModel = modelModule.default;
+  return defineModel(sequelizeInstance);
+}
+
+export async function upsertAuthData(authData, job, sequelizeInstance) {
   try {
-    await Token.upsert(authData);
+    const Token = await getTokenModel(sequelizeInstance);
+    await Token.upsert({ ...authData, job });
     console.log(
-      chalk.green('Auth data successfully upserted into the tokens database.'),
+      chalk.green(`Auth data successfully upserted into the tokens database.`),
     );
   } catch (error) {
     console.error(
-      chalk.red('Error upserting auth data into the tokens database:', error),
+      chalk.red(`Error upserting auth data into the tokens database:`, error),
     );
   }
 }
 
-export async function findByJobName(job) {
+export async function findByJobName(job, sequelizeInstance) {
   try {
+    const Token = await getTokenModel(sequelizeInstance);
     const token = await Token.findOne({ where: { job } });
     if (token) {
       console.log(chalk.green(`Token found for job: ${job}`));
@@ -24,7 +31,7 @@ export async function findByJobName(job) {
     }
     return token;
   } catch (error) {
-    console.error(chalk.red('Error finding token by job name:', error));
+    console.error(chalk.red(`Error finding token by job name:`, error));
     throw error;
   }
 }
