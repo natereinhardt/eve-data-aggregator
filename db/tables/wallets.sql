@@ -24,3 +24,15 @@ INSERT INTO S0b_Struct.wallets (Id, Name) VALUES
 (5, 'Fuel Wallet'),
 (6, 'Ore Tax'),
 (7, 'Overflow');
+
+
+-- Insert the data
+INSERT INTO Ven0m.wallets (Id, Name) VALUES
+(1, 'Master Wallet'),
+(2, 'S0B Holdings - AT WALLET'),
+(3, 'Spending Account'),
+(4, 'Payroll Account'),
+(5, 'Contract Account'),
+(6, 'Maintenance Account'),
+(7, 'Savings Account');
+
