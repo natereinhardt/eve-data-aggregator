@@ -8,6 +8,7 @@ import { importWalletData } from '../src/lib/eve-esi/walletService.mjs';
 import dotenv from 'dotenv';
 import sequelize from '../src/utils/sequelizeClient.mjs';
 import structSequelize from '../src/utils/structSequelizeClient.mjs';
+import ven0mSequelize from '../src/utils/ven0mSequelizeClient.mjs';
 import { importCsvToDb } from '../src/utils/csvWalletHistory.mjs';
 
 dotenv.config();
@@ -26,7 +27,8 @@ const runJobs = async () => {
   if (
     !jobSelections.importS0bHoldingsWalletData &&
     !jobSelections.importCsvToDb &&
-    !jobSelections.importS0bStructureManagementWalletData
+    !jobSelections.importS0bStructureManagementWalletData &&
+    !jobSelections.importVen0mWalletData
   ) {
     jobSelections = await inquirer.prompt([
       {
@@ -45,6 +47,12 @@ const runJobs = async () => {
         type: 'confirm',
         name: 'importS0bStructureManagementWalletData',
         message: 'Do you want to import S0b Structure Management Wallet Data?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'importVen0mWalletData',
+        message: 'Do you want to import Ven0m Wallet Data?',
         default: false,
       },
       // Add more prompts for other jobs here
@@ -106,6 +114,27 @@ const runJobs = async () => {
         chalk.red(
           `Error during importStructureManagementWalletData: ${error.message}`,
         ),
+      );
+    }
+  }
+
+  if (jobSelections.importVen0mWalletData) {
+    try {
+      const authData = await runOAuthFlow(
+        'importVen0mWalletData',
+        ven0mSequelize,
+      );
+      const { jwt, accessToken } = authData;
+      await importWalletData(
+        jwt,
+        accessToken,
+        ven0mSequelize,
+        process.env.VEN0M_CORPORATION_ID,
+      );
+      console.log(chalk.green('importVen0mWalletData completed successfully.'));
+    } catch (error) {
+      console.error(
+        chalk.red(`Error during importVen0mWalletData: ${error.message}`),
       );
     }
   }
