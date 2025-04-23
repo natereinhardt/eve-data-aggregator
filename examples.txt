@@ -1,0 +1,47 @@
+`https://esi.evetech.net/latest/corporations/${corporationId}/wallets/${walletDivision}/journal/?datasource=tranquility&page=${page}` = example url
+`/corporations/{corporation_id}/contracts/`= [ {
+    acceptor_id: 1234567,
+    assignee_id: 2345678,
+    availability: "personal", // or "personal", "corporation", etc.
+    buyout: 100000000.0,
+    collateral: 50000000.0,
+    contract_id: 987654,
+    date_accepted: "2024-04-01T12:00:00Z",
+    date_completed: "2024-04-02T12:00:00Z",
+    date_expired: "2024-04-10T12:00:00Z",
+    date_issued: "2024-03-31T12:00:00Z",
+    days_to_complete: 7,
+    end_location_id: 60003760,
+    for_corporation: true,
+    issuer_corporation_id: 123456,
+    issuer_id: 7654321,
+    price: 25000000.0,
+    reward: 1000000.0,
+    start_location_id: 60008494,
+    status: "outstanding", // or "finished", "in_progress", etc.
+    title: "Courier Contract",
+    type: "courier", // or "item_exchange", "auction", etc.
+    volume: 12000.0
+}];
+`/corporations/{corporation_id}/contracts/{contract_id}/items/` = [
+  {
+    "is_included": true,
+    "is_singleton": false,
+    "quantity": 110619,
+    "record_id": 4733354813,
+    "type_id": 81143
+  }
+]
+
+
+`/characters/{character_id}/` = {
+    "alliance_id": 99013537,
+    "birthday": "2018-01-03T23:42:47Z",
+    "bloodline_id": 1,
+    "corporation_id": 98762551,
+    "description": "",
+    "gender": "male",
+    "name": "Bulsoro Naari",
+    "race_id": 1,
+    "security_status": 5.002627827
+  }

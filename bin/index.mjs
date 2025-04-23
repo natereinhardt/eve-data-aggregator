@@ -5,6 +5,7 @@ import figlet from 'figlet';
 import inquirer from 'inquirer';
 import { runOAuthFlow } from '../src/lib/eve-esi/esiOauthNative.mjs';
 import { importWalletData } from '../src/lib/eve-esi/walletService.mjs';
+import { importCorporationContracts } from '../src/lib/eve-esi/contractService.mjs';
 import dotenv from 'dotenv';
 import sequelize from '../src/utils/sequelizeClient.mjs';
 import structSequelize from '../src/utils/structSequelizeClient.mjs';
@@ -28,7 +29,8 @@ const runJobs = async () => {
     !jobSelections.importS0bHoldingsWalletData &&
     !jobSelections.importCsvToDb &&
     !jobSelections.importS0bStructureManagementWalletData &&
-    !jobSelections.importVen0mWalletData
+    !jobSelections.importVen0mWalletData &&
+    !jobSelections.importS0bStructContracts
   ) {
     jobSelections = await inquirer.prompt([
       {
@@ -53,6 +55,12 @@ const runJobs = async () => {
         type: 'confirm',
         name: 'importVen0mWalletData',
         message: 'Do you want to import Ven0m Wallet Data?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'importS0bStructContracts',
+        message: 'Do you want to import S0b_Struct Contracts?',
         default: false,
       },
       // Add more prompts for other jobs here
@@ -135,6 +143,29 @@ const runJobs = async () => {
     } catch (error) {
       console.error(
         chalk.red(`Error during importVen0mWalletData: ${error.message}`),
+      );
+    }
+  }
+
+  if (jobSelections.importS0bStructContracts) {
+    try {
+      const authData = await runOAuthFlow(
+        'importS0bStructContracts',
+        structSequelize,
+      );
+      const { jwt, accessToken } = authData;
+      await importCorporationContracts(
+        jwt,
+        accessToken,
+        process.env.STRUCT_CORPORATION_ID,
+        structSequelize,
+      );
+      console.log(
+        chalk.green('importS0bStructContracts completed successfully.'),
+      );
+    } catch (error) {
+      console.error(
+        chalk.red(`Error during importS0bStructContracts: ${error.message}`),
       );
     }
   }

@@ -9,7 +9,26 @@ async function getTokenModel(sequelizeInstance) {
 export async function upsertAuthData(authData, job, sequelizeInstance) {
   try {
     const Token = await getTokenModel(sequelizeInstance);
-    await Token.upsert({ ...authData, job });
+    // Only stringify scp if it's an array
+    let dataToSave = { ...authData, job };
+    if (Array.isArray(dataToSave.scp)) {
+      dataToSave.scp = dataToSave.scp.join(' ');
+    }
+    console.log(dataToSave)
+    await Token.upsert(dataToSave, {
+      updateOnDuplicate: [
+        'access_token',
+        'expires_in',
+        'token_type',
+        'refresh_token',
+        'scp',
+        'sub',
+        'name',
+        'owner',
+        'exp',
+        'job'
+      ],
+    });
     console.log(
       chalk.green(`Auth data successfully upserted into the tokens database.`),
     );
