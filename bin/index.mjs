@@ -10,6 +10,7 @@ import dotenv from 'dotenv';
 import sequelize from '../src/utils/sequelizeClient.mjs';
 import structSequelize from '../src/utils/structSequelizeClient.mjs';
 import ven0mSequelize from '../src/utils/ven0mSequelizeClient.mjs';
+import krytekSequelize from '../src/utils/krytekSequelizeClient.mjs';
 import { importCsvToDb } from '../src/utils/csvWalletHistory.mjs';
 
 dotenv.config();
@@ -30,6 +31,7 @@ const runJobs = async () => {
     !jobSelections.importCsvToDb &&
     !jobSelections.importS0bStructureManagementWalletData &&
     !jobSelections.importVen0mWalletData &&
+    !jobSelections.importKryTekWalletData &&
     !jobSelections.importS0bStructContracts
   ) {
     jobSelections = await inquirer.prompt([
@@ -55,6 +57,12 @@ const runJobs = async () => {
         type: 'confirm',
         name: 'importVen0mWalletData',
         message: 'Do you want to import Ven0m Wallet Data?',
+        default: false,
+      },
+      {
+        type: 'confirm',
+        name: 'importKryTekWalletData',
+        message: 'Do you want to import KryTek Wallet Data?',
         default: false,
       },
       {
@@ -147,6 +155,27 @@ const runJobs = async () => {
     }
   }
 
+  if (jobSelections.importKryTekWalletData) {
+    try {
+      const authData = await runOAuthFlow(
+        'importKryTekWalletData',
+        krytekSequelize,
+      );
+      const { jwt, accessToken } = authData;
+      await importWalletData(
+        jwt,
+        accessToken,
+        krytekSequelize,
+        process.env.KRYTEK_CORPORATION_ID,
+      );
+      console.log(chalk.green('importKryTekWalletData completed successfully.'));
+    } catch (error) {
+      console.error(
+        chalk.red(`Error during importKryTekWalletData: ${error.message}`),
+      );
+    }
+  }
+
   if (jobSelections.importS0bStructContracts) {
     try {
       const authData = await runOAuthFlow(
@@ -186,6 +215,13 @@ const initialize = async () => {
     console.log(
       chalk.green(
         'Database connection to S0b_Struct has been established successfully.',
+      ),
+    );
+
+    await krytekSequelize.authenticate();
+    console.log(
+      chalk.green(
+        'Database connection to KryTek has been established successfully.',
       ),
     );
   } catch (err) {
