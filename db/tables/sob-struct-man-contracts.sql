@@ -21,5 +21,6 @@ CREATE TABLE S0b_Struct.contract (
     type VARCHAR(50),
     volume DECIMAL(18,2),
     character_name VARCHAR(100),
-    contract_type VARCHAR(100)
+    contract_type VARCHAR(100),
+    total_value DECIMAL(20,2)
 );

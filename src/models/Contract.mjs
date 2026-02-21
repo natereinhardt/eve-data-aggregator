@@ -97,6 +97,10 @@ const defineContractsModel = (sequelizeInstance) => {
         type: DataTypes.STRING(100),
         allowNull: true,
       },
+      total_value: {
+        type: DataTypes.DECIMAL(20, 2),
+        allowNull: true,
+      },
     },
     {
       tableName: 'contract',
