@@ -36,3 +36,14 @@ INSERT INTO Ven0m.wallets (Id, Name) VALUES
 (6, 'Maintenance Account'),
 (7, 'Savings Account');
 
+
+-- Insert the data
+INSERT INTO KryTek.wallets (Id, Name) VALUES
+(1, 'Master Wallet'),
+(2, 'Spending Account'),
+(3, 'BPO Account'),
+(4, 'unused'),
+(5, 'unused 1'),
+(6, 'unused 2'),
+(7, 'unused 3');
+
